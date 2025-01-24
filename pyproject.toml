@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "supervised"
+version = "0.1.0"
+description = "explore, compare, and rank professors based on their research and your academic interests."
+authors = ["frankcholula <lu.phrank@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+streamlit = "^1.41.1"
+scholarly = "^1.7.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
