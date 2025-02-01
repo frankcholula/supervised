@@ -100,63 +100,12 @@ def fetch_recent_papers(name, num_papers=5):
         return {"error": str(e)}
 
 
-def download_profile_picture(url, name):
-    """Downloads profile picture from Google Scholar and saves it with the author's name
-
-    Args:
-        url (str): URL of the profile picture
-        name (str): Name of the author to use in filename
-
-    Returns:
-        str: Path to saved image file, or None if download failed
-    """
-    if not url:
-        return None
-
-    try:
-        os.makedirs("images", exist_ok=True)
-
-        clean_name = "".join(
-            x for x in name if x.isalnum() or x in (" ", "-", "_")
-        ).rstrip()
-        image_path = os.path.join("images", f"{clean_name}.jpg")
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-
-        max_retries = 1
-        retry_delay = 5  # seconds
-
-        for attempt in range(max_retries):
-            try:
-                response = requests.get(url, headers=headers)
-                response.raise_for_status()
-                break
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 429 and attempt < max_retries - 1:
-                    time.sleep(retry_delay)
-                    retry_delay *= 2  # Exponential backoff
-                    continue
-                raise
-
-        with open(image_path, "wb") as f:
-            f.write(response.content)
-
-        return image_path
-
-    except Exception as e:
-        print(f"Failed to download profile picture: {str(e)}")
-        return None
-
-
 if __name__ == "__main__":
     try:
         load_dotenv()
         url: str = os.environ.get("SUPABASE_URL")
         key: str = os.environ.get("SUPABASE_KEY")
-        email: str = os.environ.get("SUPABASE_EMAIL")
-        password: str = os.environ.get("SUPABASE_PASSWORD")
+        
         supabase: Client = create_client(url, key)
     except Exception as e:
         print(f"Failed to load environment variables: {str(e)}")
@@ -216,10 +165,3 @@ if __name__ == "__main__":
         print(f"Failed to insert data into Supabase: {str(e)}")
 
     # author, papers = fetch_recent_papers(professor_name, 1)
-
-    # for paper in papers['recent_papers']:
-    #     print(paper)
-    # for paper in papers['most_cited_papers']:
-    #     print(paper)
-    # author = {'name': 'Joaquin M. Prada Jiménez de Cisneros', 'affiliation': 'Senior Lecturer - University of Surrey', 'h_index': 21, 'citations': 1195, 'interests': ['Mathematical Modelling', 'Immune System', 'Networks', 'Epidemiology'], 'picture_url': 'https://scholar.google.com/citations?view_op=medium_photo&user=29wOkzEAAAAJ'}
-    # picture_path = download_profile_picture(author["picture_url"], author["name"])
