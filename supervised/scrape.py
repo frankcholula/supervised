@@ -107,19 +107,15 @@ if __name__ == "__main__":
         key: str = os.environ.get("SUPABASE_KEY")
 
         supabase: Client = create_client(url, key)
-    except Exception as e:
-        print(f"Failed to load environment variables: {str(e)}")
-        raise e
 
-    print("hello world")
-    professor_name = random.choice(professors)
+        print("hello world")
+        professor_name = random.choice(professors)
 
-    author = cache.author
-    papers = cache.papers
-    # author, papers = fetch_recent_papers(professor_name, 5)
-    author, papers = cache.author, cache.papers
+        author = cache.author
+        papers = cache.papers
+        # author, papers = fetch_recent_papers(professor_name, 5)
+        author, papers = cache.author, cache.papers
 
-    try:
         data = {
             "email": author["scholar_id"],
             "profile": author,
@@ -131,6 +127,4 @@ if __name__ == "__main__":
         print(f"Successfully inserted data for {author['name']}")
 
     except Exception as e:
-        print(f"Failed to insert data into Supabase: {str(e)}")
-
-    # author, papers = fetch_recent_papers(professor_name, 1)
+        print(f"Failed: {str(e)}")
