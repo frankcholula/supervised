@@ -35,7 +35,7 @@ def fetch_recent_papers(name, num_papers=5):
         author = next(search_query)
         
         # Fill in author details including publications
-        author = scholarly.fill(author, sections=['publications'])
+        author = scholarly.fill(author, sections=['publications'], sortby='year')
         
         # Get publications and sort by year for recent papers
         publications = author['publications']
@@ -54,7 +54,6 @@ def fetch_recent_papers(name, num_papers=5):
             paper = {
                 'title': filled_pub['bib'].get('title'),
                 'year': filled_pub['bib'].get('pub_year'),
-                'venue': filled_pub['bib'].get('venue'),
                 'citations': filled_pub.get('num_citations', 0),
                 'abstract': filled_pub['bib'].get('abstract', 'Abstract not available')
             }
@@ -70,7 +69,6 @@ def fetch_recent_papers(name, num_papers=5):
             paper = {
                 'title': filled_pub['bib'].get('title'),
                 'year': filled_pub['bib'].get('pub_year'),
-                'venue': filled_pub['bib'].get('venue'),
                 'citations': filled_pub.get('num_citations', 0),
                 'abstract': filled_pub['bib'].get('abstract', 'Abstract not available')
             }
@@ -85,7 +83,7 @@ def fetch_recent_papers(name, num_papers=5):
         return {"error": f"No profile found for {name}"}
     except Exception as e:
         return {"error": str(e)}
-
+    
 def fetch_scholar_profile(name):
     try:
         search_query = scholarly.search_author(name)
@@ -107,7 +105,7 @@ def fetch_scholar_profile(name):
 
 if __name__ == "__main__":
     print("hello world")
-    professor_name = "Mark Plumbley"
+    professor_name = professors[0]#"Mark Plumbley"
     papers = fetch_recent_papers(professor_name, 3)
     print(papers)
     # result = fetch_scholar_profile(professor_name)
