@@ -1,3 +1,3 @@
 .PHONY: run
 run:
-	streamlit run supervised.py --server.runOnSave true
+	streamlit run supervised/scrape.py --server.runOnSave true
