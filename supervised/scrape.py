@@ -2,9 +2,8 @@ import random
 import streamlit as st
 from scholarly import scholarly
 import copy
-import requests
 import os
-import time
+import supervised.cache as cache
 
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -113,42 +112,9 @@ if __name__ == "__main__":
 
     print("hello world")
     professor_name = random.choice(professors)
-    author = {
-        "name": "Ying-Hao Eddie Chu",
-        "affiliation": "National Tsing Hua University, National Yang Ming Chiao Tung university, Academia Sinica",
-        "h_index": 91,
-        "citations": 36476,
-        "interests": [
-            "Transparent Electronics",
-            "Oxides",
-            "MICAtronics",
-            "van der Waals epitaxy",
-            "high entropy materials",
-        ],
-        "picture_url": "https://scholar.google.com/citations?view_op=medium_photo&user=56HLf2sAAAAJ",
-    }
-    papers = {
-        "recent_papers": [
-            {
-                "title": "Resistive Switching Behaviors of PbHfO3 RRAM at Atomic Scale",
-                "year": 2025,
-                "citations": 0,
-                "abstract": "Ternary metal oxide-based resistive random access memory (RRAM) is becoming increasingly popular in memory systems owing to its excellent characteristics, such as high switching speed and reliable stability. In this study, dielectric layer PbHfO3 (PHO) films were epitaxially deposited on the SrRuO3 (SRO) bottom electrode, and Au was deposited as the top electrode. PHO shows resistive switching properties, with a uniform distribution of low-resistance state (LRS) and high-resistance state (HRS), and a long retention time (over 104 s). The atomic resolution transmission electron microscope (TEM) and scanning transmission electron microscope (STEM) images demonstrate the structural evolution of PHO before and after switching. Electron energy loss spectroscopy (EELS) and X-ray photoelectron spectroscopy (XPS) further confirmed the resistive switching path. The results demonstrate the exploitability of …",
-                "pub_url": "https://www.sciencedirect.com/science/article/pii/S0925838825002427",
-                "eprint_url": None,
-            }
-        ],
-        "most_cited_papers": [
-            {
-                "title": "Above-bandgap voltages from ferroelectric photovoltaic devices",
-                "year": 2010,
-                "citations": 1833,
-                "abstract": "In conventional solid-state photovoltaics, electron–hole pairs are created by light absorption in a semiconductor and separated by the electric field spaning a micrometre-thick depletion region. The maximum voltage these devices can produce is equal to the semiconductor electronic bandgap. Here, we report the discovery of a fundamentally different mechanism for photovoltaic charge separation, which operates over a distance of 1–2 nm and produces voltages that are significantly higher than the bandgap. The separation happens at previously unobserved nanoscale steps of the electrostatic potential that naturally occur at ferroelectric domain walls in the complex oxide BiFeO3. Electric-field control over domain structure allows the photovoltaic effect to be reversed in polarity or turned off. This new degree of control, and the high voltages produced, may find application in optoelectronic devices.",
-                "pub_url": "https://www.nature.com/articles/nnano.2009.451",
-                "eprint_url": None,
-            }
-        ],
-    }
+    
+    author = cache.author
+    papers = cache.papers
 
     try:
         data = {
