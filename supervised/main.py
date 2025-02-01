@@ -1,5 +1,7 @@
 import streamlit as st
+from streamlit_extras.colored_header import colored_header
 
+# Data for professors
 professors = [
     {
         "name": "Prof. John Doe",
@@ -23,48 +25,58 @@ professors = [
     },
 ]
 
+# Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
+
+# Sidebar configuration
 with st.sidebar:
     st.markdown(
         "<style>.sidebar .sidebar-content { background-color: #FFA500; }</style>",
         unsafe_allow_html=True,
     )
-    st.title("Search Professors")
+    st.subheader("🔍 Search Your Professor")
 
-    area_of_interest = st.text_input(label="Area of Interest", placeholder= "Computer Vision")
-
-    st.subheader("📌 Ranking by Citations")
-    top_citations = sorted(professors, key=lambda x: x["citations"], reverse=True)
-    for prof in top_citations[:3]:
-        st.markdown(f"- **{prof['name']}**: {prof['citations']} citations")
-
-    st.subheader("🔥 Ranking by Recent Activity")
-    top_recent = sorted(
-        professors, key=lambda x: x["citations"] + x["citations_2020"], reverse=True
+    area_of_interest = st.multiselect(
+        label="Area of Interest",
+        options=["Computer Vision", "Machine Learning on Data"],
+        placeholder="Your Area of Interest",
     )
-    for prof in top_recent[:3]:
-        st.markdown(
-            f"- **{prof['name']}**: {prof['citations']} total, {prof['citations_2020']} since 2020"
-        )
-    # Top by H-Index
-    st.subheader("🏆 Ranking by H-Index")
-    top_h_index = sorted(professors, key=lambda x: x["h_index"], reverse=True)
-    for prof in top_h_index[:3]:
-        st.markdown(f"- **{prof['name']}**: h-index {prof['h_index']}")
 
+# Function to display ranking
+def display_ranking(title, ranking_key, top_n=3, additional_info=None):
+    st.subheader(title)
+    sorted_profs = sorted(professors, key=ranking_key, reverse=True)
+    for prof in sorted_profs[:top_n]:
+        info = f"- **{prof['name']}**: {ranking_key(prof)}"
+        if additional_info:
+            info += f", {additional_info(prof)}"
+        st.markdown(info)
 
-st.title("Professors in the Field")
-# Only select top 3 professors
+# Display rankings in the sidebar
+with st.sidebar:
+    display_ranking("📌 Ranking by Citations", lambda x: x["citations"])
+    display_ranking(
+        "🏃 Ranking by Recent Activity",
+        lambda x: x["citations"] + x["citations_2020"],
+        additional_info=lambda x: f"{x['citations']} total, {x['citations_2020']} since 2020",
+    )
+    display_ranking("🏆 Ranking by H-Index", lambda x: x["h_index"])
+
+# Main content
+colored_header("Recommended to You...", description="")
+
+# Filter professors based on area of interest
+filtered_professors = [prof for prof in professors if prof["area"] in area_of_interest]
+
+# Display top 3 professors
 row = st.columns(3)
-
-for col in row:
-    tile = col.container(border=True)
-    tile.header(f"**{professors[0]['name']}**")
-
-    tile.image(professors[0]["image"], use_container_width=True)
-    tile.markdown(f"Area: {professors[0]['area']}")
-    tile.markdown(f"h-index: {professors[0]['h_index']}")
-    tile.markdown(f"Citations: {professors[0]['citations']}")
-    tile.markdown(f"Citations 2020: {professors[0]['citations_2020']}")
-
-
+for i, col in enumerate(row):
+    if i < len(filtered_professors):
+        prof = filtered_professors[i]
+        tile = col.container()
+        tile.header(f"**{prof['name']}**")
+        tile.image(prof["image"], use_container_width=True)
+        tile.markdown(f"Area: {prof['area']}")
+        tile.markdown(f"h-index: {prof['h_index']}")
+        tile.markdown(f"Citations: {prof['citations']}")
+        tile.markdown(f"Citations 2020: {prof['citations_2020']}")
