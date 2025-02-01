@@ -57,6 +57,7 @@ def fetch_recent_papers(name, num_papers=5):
         )
 
         profile = {
+            "scholar_id": author_by_year.get("scholar_id"),
             "name": author_by_year.get("name"),
             "affiliation": author_by_year.get("affiliation"),
             "h_index": author_by_year.get("hindex"),
@@ -104,7 +105,7 @@ if __name__ == "__main__":
         load_dotenv()
         url: str = os.environ.get("SUPABASE_URL")
         key: str = os.environ.get("SUPABASE_KEY")
-        
+
         supabase: Client = create_client(url, key)
     except Exception as e:
         print(f"Failed to load environment variables: {str(e)}")
@@ -112,13 +113,15 @@ if __name__ == "__main__":
 
     print("hello world")
     professor_name = random.choice(professors)
-    
+
     author = cache.author
     papers = cache.papers
+    # author, papers = fetch_recent_papers(professor_name, 5)
+    author, papers = cache.author, cache.papers
 
     try:
         data = {
-            "email": f"{author['name'].lower().replace(' ', '.')}@surrey.ac.uk",
+            "email": author["scholar_id"],
             "profile": author,
             "avatar_url": author["picture_url"],
             "publications": papers,
