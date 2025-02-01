@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from PIL import Image
-import random
+
 
 # Sample Data (Replace with actual data)
 professors = [
@@ -33,7 +32,7 @@ for idx, prof in enumerate(professors):
                     padding: 20px; 
                     border-radius:20px; 
                     box-shadow: 3px 3px 15px rgba(0,0,0,0.2); 
-                    color: white;
+                    color:      ;
                     display: flex;
                     flex-direction: row;
                     width: 100%;
