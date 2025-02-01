@@ -1,3 +1,7 @@
 .PHONY: run
 run:
-	streamlit run supervised.py --server.runOnSave true
+	streamlit run supervised/main.py --server.runOnSave true
+
+.PHONY: backend
+backend:
+	python supervised/backend.py
