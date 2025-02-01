@@ -40,7 +40,7 @@ with st.sidebar:
     st.subheader("📌 Ranking by Citations")
     top_citations = sorted(professors, key=lambda x: x["citations"], reverse=True)
     for prof in top_citations[:3]:
-        st.sidebar.markdown(f"- **{prof['name']}**: {prof['citations']} citations")
+        st.markdown(f"- **{prof['name']}**: {prof['citations']} citations")
 
     # Top by Citations & Recent Activity
     st.subheader("🔥 Ranking by Recent Activity")
@@ -55,7 +55,7 @@ with st.sidebar:
     st.subheader("🏆 Ranking by H-Index")
     top_h_index = sorted(professors, key=lambda x: x["h_index"], reverse=True)
     for prof in top_h_index[:3]:
-        st.sidebar.markdown(f"- **{prof['name']}**: h-index {prof['h_index']}")
+        st.markdown(f"- **{prof['name']}**: h-index {prof['h_index']}")
 
 # Display Professors
 st.title("Professors in the Field")
