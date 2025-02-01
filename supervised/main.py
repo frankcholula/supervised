@@ -5,6 +5,7 @@ from supabase import create_client, Client
 # Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
 
+
 @st.cache_resource
 def init_connection():
     url: str = st.secrets["supabase"]["SUPABASE_URL"]
