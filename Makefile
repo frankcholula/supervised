@@ -5,3 +5,7 @@ run:
 .PHONY: backend
 backend:
 	python supervised/backend.py
+
+.PHONY: summarize
+summarize:
+	python supervised/summarize.py
