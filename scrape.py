@@ -48,6 +48,7 @@ def fetch_scholar_profile(name):
         return {"error": str(e)}
 
 if __name__ == "__main__":
-    professor_name = "Mark Plumbley"
-    result = fetch_scholar_profile(professor_name)
-    print(result)
+    print("hello world")
+    # professor_name = "Mark Plumbley"
+    # result = fetch_scholar_profile(professor_name)
+    # print(result)
