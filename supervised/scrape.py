@@ -6,7 +6,6 @@ import os
 import supervised.cache as cache
 
 from supabase import create_client, Client
-from dotenv import load_dotenv
 
 professors = [
     "Mark Plumbley",
@@ -102,9 +101,8 @@ def fetch_recent_papers(name, num_papers=5):
 
 if __name__ == "__main__":
     try:
-        load_dotenv()
-        url: str = os.environ.get("SUPABASE_URL")
-        key: str = os.environ.get("SUPABASE_KEY")
+        url: str = st.secrets["supabase"]["SUPABASE_URL"]
+        key: str = st.secrets["supabase"]["SUPABASE_KEY"]
 
         supabase: Client = create_client(url, key)
 

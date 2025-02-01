@@ -4,4 +4,4 @@ run:
 
 .PHONY: backend
 backend:
-	python supervised/backend.py
+	streamlit run supervised/backend.py --server.runOnSave true
