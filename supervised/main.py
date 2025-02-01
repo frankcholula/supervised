@@ -6,7 +6,7 @@ from supabase import create_client, Client
 st.set_page_config(page_title="Supervised", layout="wide")
 
 @st.cache_resource
-def init_connectino():
+def init_connection():
     url: str = st.secrets["supabase"]["SUPABASE_URL"]
     key: str = st.secrets["supabase"]["SUPABASE_KEY"]
     return create_client(url, key)
@@ -15,7 +15,7 @@ def init_connectino():
 @st.cache_data(ttl=600)
 def fetch_professors():
     try:
-        supabase = init_connectino()
+        supabase = init_connection()
         response = supabase.table("professors").select("*").execute()
         professors_data = response.data
         print(len(professors_data))
