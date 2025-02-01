@@ -58,7 +58,7 @@ st.title("Professors in the Field")
 row = st.columns(3)
 
 for col in row:
-    tile = col.container()
+    tile = col.container(border=True)
     tile.header(f"**{professors[0]['name']}**")
 
     tile.image(professors[0]["image"], use_container_width=True)
