@@ -6,6 +6,9 @@ import requests
 import os
 import time
 
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
 professors = [
     "Mark Plumbley",
     "Yi-Zhe Song",
@@ -148,6 +151,17 @@ def download_profile_picture(url, name):
 
 
 if __name__ == "__main__":
+    try:
+        load_dotenv()
+        url: str = os.environ.get("SUPABASE_URL")
+        key: str = os.environ.get("SUPABASE_KEY")
+        email: str = os.environ.get("SUPABASE_EMAIL")
+        password: str = os.environ.get("SUPABASE_PASSWORD")
+        supabase: Client = create_client(url, key)
+    except Exception as e:
+        print(f"Failed to load environment variables: {str(e)}")
+        raise e
+
     print("hello world")
     professor_name = random.choice(professors)
     author = {
@@ -187,6 +201,20 @@ if __name__ == "__main__":
         ],
     }
 
+    try:
+        data = {
+            "email": f"{author['name'].lower().replace(' ', '.')}@surrey.ac.uk",
+            "profile": author,
+            "avatar_url": author["picture_url"],
+            "publications": papers,
+        }
+
+        response = supabase.table("professors").insert(data).execute()
+        print(f"Successfully inserted data for {author['name']}")
+
+    except Exception as e:
+        print(f"Failed to insert data into Supabase: {str(e)}")
+
     # author, papers = fetch_recent_papers(professor_name, 1)
 
     # for paper in papers['recent_papers']:
@@ -194,4 +222,4 @@ if __name__ == "__main__":
     # for paper in papers['most_cited_papers']:
     #     print(paper)
     # author = {'name': 'Joaquin M. Prada Jiménez de Cisneros', 'affiliation': 'Senior Lecturer - University of Surrey', 'h_index': 21, 'citations': 1195, 'interests': ['Mathematical Modelling', 'Immune System', 'Networks', 'Epidemiology'], 'picture_url': 'https://scholar.google.com/citations?view_op=medium_photo&user=29wOkzEAAAAJ'}
-    picture_path = download_profile_picture(author["picture_url"], author["name"])
+    # picture_path = download_profile_picture(author["picture_url"], author["name"])
