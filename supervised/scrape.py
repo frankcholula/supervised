@@ -2,7 +2,6 @@ import random
 import streamlit as st
 from scholarly import scholarly
 import copy
-import os
 import supervised.cache as cache
 
 from supabase import create_client, Client
