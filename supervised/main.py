@@ -37,9 +37,9 @@ with st.sidebar:
     st.subheader("🔍 Search Your Professor")
 
     area_of_interest = st.multiselect(
-        label="Area of Interest",
+        label="Areas of Interest",
         options=["Computer Vision", "Machine Learning on Data"],
-        placeholder="Your Area of Interest",
+        placeholder="Your Areas of Interest",
     )
 
 # Function to display ranking
