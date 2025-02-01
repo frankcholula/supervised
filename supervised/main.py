@@ -1,20 +1,22 @@
 import streamlit as st
 from streamlit_extras.colored_header import colored_header
-import os
 from supabase import create_client, Client
-from dotenv import load_dotenv
 
 # Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
 
-load_dotenv()
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+
+@st.cache_resource
+def init_connection():
+    url: str = st.secrets["supabase"]["SUPABASE_URL"]
+    key: str = st.secrets["supabase"]["SUPABASE_KEY"]
+    return create_client(url, key)
 
 
+@st.cache_data(ttl=600)
 def fetch_professors():
     try:
+        supabase = init_connection()
         response = supabase.table("professors").select("*").execute()
         professors_data = response.data
         print(len(professors_data))
@@ -39,6 +41,7 @@ def fetch_professors():
     except Exception as e:
         st.error(f"Error fetching professor data: {str(e)}")
         return []
+
 
 professors = fetch_professors()
 
@@ -71,7 +74,7 @@ def display_ranking(title, ranking_key, top_n=5, additional_info=None):
             ]
         ),
         key=ranking_key,
-        reverse=True
+        reverse=True,
     )
     for prof in sorted_profs[:top_n]:
         info = f"- **{prof['name']}**: {ranking_key(prof)}"
