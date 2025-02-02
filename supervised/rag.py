@@ -72,6 +72,8 @@ def get_similar_documents(query: str, limit: int = 10):
             key=lambda x: len(x[1]["documents"]),
             reverse=True
         ):
+            if len(data["documents"]) < 2:
+                continue
             # for doc in data["documents"]:
             results.append({
                 # "text": data["documents"][0]["text"],

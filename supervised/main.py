@@ -4,6 +4,9 @@ from supabase import create_client
 from streamlit_agraph import agraph, Node, Edge, Config
 import plotly.express as px
 import pandas as pd
+from supervised.rag import get_similar_documents
+import numpy as np
+from ast import literal_eval
 
 # Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
@@ -41,6 +44,8 @@ def fetch_professors():
                 "top_papers": [p["title"] for p in publications["most_cited_papers"]],
                 "recent_papers": [p["title"] for p in publications["recent_papers"]],
                 "image": profile["picture_url"],
+                "summary": prof["summary"],
+                "summary_embedding": prof["summary_embedding"],
             }
             professors.append(professor)
 
@@ -73,18 +78,12 @@ with st.sidebar:
 
 
 # Function to display ranking
-def display_ranking(title, ranking_key, top_n=5, additional_info=None):
+def display_ranking(
+    title, ranking_key, profs=professors, top_n=5, additional_info=None
+):
     st.subheader(title)
     sorted_profs = sorted(
-        (
-            professors
-            if len(area_of_interest) == 0
-            else [
-                prof
-                for prof in professors
-                if set(prof["areas"]).intersection(area_of_interest)
-            ]
-        ),
+        profs,
         key=ranking_key,
         reverse=True,
     )
@@ -97,38 +96,77 @@ def display_ranking(title, ranking_key, top_n=5, additional_info=None):
 
 # Display rankings in the sidebar
 with st.sidebar:
-    display_ranking("📌 Ranking by Citations", lambda x: x["citations"])
-    display_ranking("🏆 Ranking by H-Index", lambda x: x["h_index"])
 
+    filtered_professors = (
+        [
+            {
+                "name": x["professor"]["profile"]["name"],
+                "areas": [
+                    area.lower() for area in x["professor"]["profile"]["interests"]
+                ],
+                "h_index": x["professor"]["profile"]["h_index"],
+                "citations": x["professor"]["profile"]["citations"],
+                # "citations_2020": 0,  # This would need to be calculated if needed
+                "top_papers": [
+                    p["title"]
+                    for p in x["professor"]["publications"]["most_cited_papers"]
+                ],
+                "recent_papers": [
+                    p["title"] for p in x["professor"]["publications"]["recent_papers"]
+                ],
+                "image": x["professor"]["profile"]["picture_url"],
+                "summary": x["professor"]["summary"],
+                "summary_embedding": x["professor"]["summary_embedding"],
+            }
+            for x in get_similar_documents(semantic_search, 20)
+        ]
+        if semantic_search and len(semantic_search) > 0
+        else [
+            prof
+            for prof in professors
+            if set(prof["areas"]).intersection(area_of_interest)
+        ]
+    )
 
+    display_ranking(
+        "📌 Ranking by Citations",
+        lambda x: x["citations"],
+        profs=filtered_professors if filtered_professors != [] else professors,
+    )
+    display_ranking(
+        "🏆 Ranking by H-Index",
+        lambda x: x["h_index"],
+        profs=filtered_professors if filtered_professors != [] else professors,
+    )
 # Main content
 with tab1:
     colored_header("Recommended to You...", description="")
 
     # Filter professors based on area of interest
-    filtered_professors = [
-        prof for prof in professors if set(prof["areas"]).intersection(area_of_interest)
-    ]
 
     # Display top N professors
-    top_matching_professors = 5
+    top_matching_professors = 6
 
-    row = st.columns(top_matching_professors)
-    for i, col in enumerate(row):
+    row1 = st.columns(3)
+    row2 = st.columns(3)
+
+    for i in range(6):
         if i < len(filtered_professors):
             prof = filtered_professors[i]
+            # Select column from appropriate row
+            col = row1[i % 3] if i < 3 else row2[i % 3]
             tile = col.container()
             tile.header(f"**{prof['name']}**")
-            tile.image(prof["image"], use_container_width=True)
+            tile.image(prof["image"], width=200)
             tile.markdown(f"**Areas of Interest**: {', '.join(prof['areas'])}")
             tile.markdown(f"**h-index**: {prof['h_index']}")
             tile.markdown(f"**Citations**: {prof['citations']}")
-
+            tile.markdown(f"{prof['summary']}")
 with tab2:
     nodes = []
     edges = []
-
-    for prof in professors:
+    use_professors = filtered_professors if filtered_professors != [] else professors
+    for prof in use_professors:
         nodes.append(
             Node(
                 id=prof["name"],  # using name as unique ID
@@ -140,15 +178,29 @@ with tab2:
         )
 
     # Create edges based on similar research areas
-    for i, prof1 in enumerate(professors):
-        for prof2 in professors[i + 1 :]:
-            # Create edge if professors share any research areas
-            common_areas = set(prof1["areas"]) & set(prof2["areas"])
-            if common_areas:
+    for i, prof1 in enumerate(use_professors):
+        for prof2 in use_professors[i + 1 :]:
+            # Calculate distance between professor embeddings
+
+            distance = np.linalg.norm(
+                np.array(literal_eval(prof1["summary_embedding"]), dtype=float)
+                - np.array(literal_eval(prof2["summary_embedding"]), dtype=float)
+            )
+            threshold = 1.15  # Adjust this threshold as needed
+
+            if distance < threshold:
+                # Weight is inverse of distance (closer = stronger connection)
+                weight = 1.0 / (
+                    distance + 0.0001
+                )  # Add small constant to avoid division by zero
                 edges.append(
                     Edge(
                         source=prof1["name"],
                         target=prof2["name"],
+                        width=weight,  # Edge thickness based on weight
+                        title=f"Similarity: {weight:.2f}",  # Show weight on hover,
+                        semanticStrokeWidth=True,
+                        strokeWidth=500,
                     )
                 )
 
@@ -159,53 +211,56 @@ with tab2:
         physics=True,
         hierarchical=False,
         interaction={"hover": True},
+        staticGraphWithDragAndDrop=True,
+        semanticStrokeWidth=True,
+        strokeWidth=500,
     )
 
-    return_value = agraph(nodes=nodes, edges=edges, config=config)
+    return_value = agraph(nodes=nodes, edges=edges, config=config,)
 
 
 with tab3:
-    
-    if filtered_professors == []:
+    use_professors = filtered_professors if filtered_professors != [] else professors
+    if use_professors == []:
         st.warning("No professors found matching your criteria.")
     else:
-        df = pd.DataFrame(filtered_professors)
+        df = pd.DataFrame(use_professors)
 
         def create_scatter_plot():
             st.subheader("H-Index vs. Total Citations")
             fig = px.scatter(
                 df,
-                x='h_index',
-                y='citations',
-                size='h_index',
-                hover_data=['name', 'areas'],
-                labels={'h_index': 'H-Index', 'citations': 'Total Citations', 'name': 'Professor'}
+                x="h_index",
+                y="citations",
+                size="h_index",
+                hover_data=["name", "areas"],
+                labels={
+                    "h_index": "H-Index",
+                    "citations": "Total Citations",
+                    "name": "Professor",
+                },
             )
-            
+
             fig.update_layout(
                 showlegend=False,
-                plot_bgcolor='white',
+                plot_bgcolor="white",
                 width=800,
                 height=600,
-                hovermode='closest'
+                hovermode="closest",
             )
-            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
-            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="LightGray")
+            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="LightGray")
             st.plotly_chart(fig, use_container_width=True)
 
         def show_rankings():
-            metrics = {
-            "H-Index": "h_index",
-            "Citations": "citations"
-            }
-            
+            metrics = {"H-Index": "h_index", "Citations": "citations"}
+
             for title, metric in metrics.items():
                 st.subheader(f"Ranking by {title}")
                 # Sort dataframe by the current metric in descending order
                 sorted_df = df.sort_values(by=metric, ascending=False)
                 chart_type = st.scatter_chart if metric == "h_index" else st.bar_chart
                 chart_type(data=sorted_df, x="name", y=metric, use_container_width=True)
-
 
         create_scatter_plot()
         show_rankings()
