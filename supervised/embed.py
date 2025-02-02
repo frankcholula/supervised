@@ -1,10 +1,9 @@
-import os
 import streamlit as st
 from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
 from chonkie import TokenChunker
 from tqdm import tqdm
-from tokenizers import Tokenizer 
+from tokenizers import Tokenizer
 
 # Initialize Supabase client
 url: str = st.secrets["supabase"]["SUPABASE_URL"]
@@ -12,11 +11,12 @@ key: str = st.secrets["supabase"]["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
 # Initialize sentence transformer model and text chunker
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
 tokenizer = Tokenizer.from_pretrained("sentence-transformers/all-mpnet-base-v2")
 
 # Initialize the chunker
 chunker = TokenChunker(tokenizer)
+
 
 def process_professor_papers():
     try:
@@ -26,35 +26,35 @@ def process_professor_papers():
 
         for professor in tqdm(professors, desc="Processing professors"):
             professor_id = professor["id"]
-            
+
             # Process all papers (both recent and most cited)
-            all_papers = (professor["publications"]["recent_papers"] + 
-                        professor["publications"]["most_cited_papers"])
-            
+            all_papers = (
+                professor["publications"]["recent_papers"]
+                + professor["publications"]["most_cited_papers"]
+            )
+
             for paper in tqdm(all_papers, desc="Processing papers", leave=False):
                 abstract = paper["abstract"]
                 # Split abstract into chunks using chonky
                 chunks = chunker(abstract)
-                
+
                 for chunk in tqdm(chunks, desc="Processing chunks", leave=False):
                     # Generate embedding
                     embedding = model.encode(chunk.text)
-                    
+
                     # Insert into documents table
                     doc_data = {
                         "professor_id": professor_id,
                         "text": chunk.text,
-                        "embedding": embedding.tolist()  # Convert numpy array to list
+                        "embedding": embedding.tolist(),  # Convert numpy array to list
                     }
-                    
+
                     supabase.table("documents").insert(doc_data).execute()
         print("Successfully processed all papers and created embeddings")
 
     except Exception as e:
         print(f"Error processing papers: {str(e)}")
 
+
 if __name__ == "__main__":
     process_professor_papers()
-
-
-
