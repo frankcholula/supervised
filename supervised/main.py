@@ -120,7 +120,7 @@ with st.sidebar:
             }
             for x in get_similar_documents(semantic_search, 20)
         ]
-        if semantic_search
+        if semantic_search and len(semantic_search) > 0
         else [
             prof
             for prof in professors
@@ -131,12 +131,12 @@ with st.sidebar:
     display_ranking(
         "📌 Ranking by Citations",
         lambda x: x["citations"],
-        profs=filtered_professors,
+        profs=filtered_professors if filtered_professors != [] else professors,
     )
     display_ranking(
         "🏆 Ranking by H-Index",
         lambda x: x["h_index"],
-        profs=filtered_professors,
+        profs=filtered_professors if filtered_professors != [] else professors,
     )
 # Main content
 with tab1:
@@ -165,8 +165,8 @@ with tab1:
 with tab2:
     nodes = []
     edges = []
-
-    for prof in filtered_professors:
+    use_professors = filtered_professors if filtered_professors != [] else professors
+    for prof in use_professors:
         nodes.append(
             Node(
                 id=prof["name"],  # using name as unique ID
@@ -178,8 +178,8 @@ with tab2:
         )
 
     # Create edges based on similar research areas
-    for i, prof1 in enumerate(filtered_professors):
-        for prof2 in filtered_professors[i + 1 :]:
+    for i, prof1 in enumerate(use_professors):
+        for prof2 in use_professors[i + 1 :]:
             # Calculate distance between professor embeddings
 
             distance = np.linalg.norm(
@@ -220,11 +220,11 @@ with tab2:
 
 
 with tab3:
-
-    if filtered_professors == []:
+    use_professors = filtered_professors if filtered_professors != [] else professors
+    if use_professors == []:
         st.warning("No professors found matching your criteria.")
     else:
-        df = pd.DataFrame(filtered_professors)
+        df = pd.DataFrame(use_professors)
 
         def create_scatter_plot():
             st.subheader("H-Index vs. Total Citations")
