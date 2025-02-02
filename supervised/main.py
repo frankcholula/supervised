@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_extras.colored_header import colored_header
-from supabase import create_client, Client
+from supabase import create_client
 from streamlit_agraph import agraph, Node, Edge, Config
 
 # Streamlit page configuration
