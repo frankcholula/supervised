@@ -1,9 +1,14 @@
 import streamlit as st
 from streamlit_extras.colored_header import colored_header
-from supabase import create_client, Client
+from supabase import create_client
+from streamlit_agraph import agraph, Node, Edge, Config
 
 # Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
+
+# Streamlit tabs
+# TODO: Add tabs later to unclutter some data
+tab1, tab2, tab3 = st.tabs(["Recommendations", "Network Graph", "Rankings"])
 
 
 @st.cache_resource
@@ -53,8 +58,10 @@ with st.sidebar:
     )
     st.subheader("🔍 Search Your Professor")
 
+    semantic_search = st.text_input("What research topics are you looking for?", placeholder="e.g. I love sketching and machine learning!")
+
     area_of_interest = st.multiselect(
-        label="Areas of Interest",
+        label="Filter by Areas of Interest",
         options=list(set([area for prof in professors for area in prof["areas"]])),
         placeholder="Your Areas of Interest",
     )
@@ -88,25 +95,65 @@ with st.sidebar:
     display_ranking("📌 Ranking by Citations", lambda x: x["citations"])
     display_ranking("🏆 Ranking by H-Index", lambda x: x["h_index"])
 
+
 # Main content
-colored_header("Recommended to You...", description="")
+with tab1:
+    colored_header("Recommended to You...", description="")
 
-# Filter professors based on area of interest
-filtered_professors = [
-    prof for prof in professors if set(prof["areas"]).intersection(area_of_interest)
-]
+    # Filter professors based on area of interest
+    filtered_professors = [
+        prof for prof in professors if set(prof["areas"]).intersection(area_of_interest)
+    ]
 
-# Display top N professors
-top_matching_professors = 5
+    # Display top N professors
+    top_matching_professors = 5
 
-row = st.columns(top_matching_professors)
-for i, col in enumerate(row):
-    if i < len(filtered_professors):
-        prof = filtered_professors[i]
-        tile = col.container()
-        tile.header(f"**{prof['name']}**")
-        tile.image(prof["image"], use_container_width=True)
-        tile.markdown(f"Areas: {', '.join(prof['areas'])}")
-        tile.markdown(f"h-index: {prof['h_index']}")
-        tile.markdown(f"Citations: {prof['citations']}")
-        # tile.markdown(f"Citations 2020: {prof['citations_2020']}")
+    row = st.columns(top_matching_professors)
+    for i, col in enumerate(row):
+        if i < len(filtered_professors):
+            prof = filtered_professors[i]
+            tile = col.container()
+            tile.header(f"**{prof['name']}**")
+            tile.image(prof["image"], use_container_width=True)
+            tile.markdown(f"**Areas of Interest**: {', '.join(prof['areas'])}")
+            tile.markdown(f"**h-index**: {prof['h_index']}")
+            tile.markdown(f"**Citations**: {prof['citations']}")
+
+with tab2:
+    nodes = []
+    edges = []
+
+    for prof in professors:
+        nodes.append(
+            Node(
+                id=prof["name"],  # using name as unique ID
+                size=25,
+                shape="circularImage",
+                image=prof["image"],
+                title=f"Name: {prof['name']}\nAreas: {', '.join(prof['areas'])}\nCitations: {prof['citations']}",
+            )
+        )
+
+    # Create edges based on similar research areas
+    for i, prof1 in enumerate(professors):
+        for prof2 in professors[i + 1 :]:
+            # Create edge if professors share any research areas
+            common_areas = set(prof1["areas"]) & set(prof2["areas"])
+            if common_areas:
+                edges.append(
+                    Edge(
+                        source=prof1["name"],
+                        target=prof2["name"],
+                    )
+                )
+
+    config = Config(
+        width="100%",
+        height=1000,
+        directed=False,
+        physics=True,
+        hierarchical=False,
+        interaction={"hover": True},
+    )
+
+    return_value = agraph(nodes=nodes, edges=edges, config=config)
