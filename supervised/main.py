@@ -5,6 +5,8 @@ from streamlit_agraph import agraph, Node, Edge, Config
 import plotly.express as px
 import pandas as pd
 from supervised.rag import get_similar_documents
+import numpy as np
+from ast import literal_eval
 
 # Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
@@ -43,6 +45,7 @@ def fetch_professors():
                 "recent_papers": [p["title"] for p in publications["recent_papers"]],
                 "image": profile["picture_url"],
                 "summary": prof["summary"],
+                "summary_embedding": prof["summary_embedding"],
             }
             professors.append(professor)
 
@@ -113,8 +116,9 @@ with st.sidebar:
                 ],
                 "image": x["professor"]["profile"]["picture_url"],
                 "summary": x["professor"]["summary"],
+                "summary_embedding": x["professor"]["summary_embedding"],
             }
-            for x in get_similar_documents(semantic_search)
+            for x in get_similar_documents(semantic_search, 20)
         ]
         if semantic_search
         else [
@@ -162,7 +166,7 @@ with tab2:
     nodes = []
     edges = []
 
-    for prof in professors:
+    for prof in filtered_professors:
         nodes.append(
             Node(
                 id=prof["name"],  # using name as unique ID
@@ -174,15 +178,29 @@ with tab2:
         )
 
     # Create edges based on similar research areas
-    for i, prof1 in enumerate(professors):
-        for prof2 in professors[i + 1 :]:
-            # Create edge if professors share any research areas
-            common_areas = set(prof1["areas"]) & set(prof2["areas"])
-            if common_areas:
+    for i, prof1 in enumerate(filtered_professors):
+        for prof2 in filtered_professors[i + 1 :]:
+            # Calculate distance between professor embeddings
+
+            distance = np.linalg.norm(
+                np.array(literal_eval(prof1["summary_embedding"]), dtype=float)
+                - np.array(literal_eval(prof2["summary_embedding"]), dtype=float)
+            )
+            threshold = 1.15  # Adjust this threshold as needed
+
+            if distance < threshold:
+                # Weight is inverse of distance (closer = stronger connection)
+                weight = 1.0 / (
+                    distance + 0.0001
+                )  # Add small constant to avoid division by zero
                 edges.append(
                     Edge(
                         source=prof1["name"],
                         target=prof2["name"],
+                        width=weight,  # Edge thickness based on weight
+                        title=f"Similarity: {weight:.2f}",  # Show weight on hover,
+                        semanticStrokeWidth=True,
+                        strokeWidth=500,
                     )
                 )
 
@@ -193,9 +211,12 @@ with tab2:
         physics=True,
         hierarchical=False,
         interaction={"hover": True},
+        staticGraphWithDragAndDrop=True,
+        semanticStrokeWidth=True,
+        strokeWidth=500,
     )
 
-    return_value = agraph(nodes=nodes, edges=edges, config=config)
+    return_value = agraph(nodes=nodes, edges=edges, config=config,)
 
 
 with tab3:
