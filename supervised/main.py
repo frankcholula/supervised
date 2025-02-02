@@ -58,8 +58,10 @@ with st.sidebar:
     )
     st.subheader("🔍 Search Your Professor")
 
+    semantic_search = st.text_input("What research topics are you looking for?", placeholder="e.g. I love sketching and machine learning!")
+
     area_of_interest = st.multiselect(
-        label="Areas of Interest",
+        label="Filter by Areas of Interest",
         options=list(set([area for prof in professors for area in prof["areas"]])),
         placeholder="Your Areas of Interest",
     )
