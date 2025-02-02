@@ -8,7 +8,7 @@ st.set_page_config(page_title="Supervised", layout="wide")
 
 # Streamlit tabs
 # TODO: Add tabs later to unclutter some data
-tab1, tab2, tab3 = st.tabs(["Recommendations", "Network Graph", "Visualizations"])
+tab1, tab2, tab3 = st.tabs(["Recommendations", "Network Graph", "Rankings"])
 
 
 @st.cache_resource
@@ -128,7 +128,7 @@ with tab2:
                 size=25,
                 shape="circularImage",
                 image=prof["image"],
-                title=f"Name: s{prof['name']}\nAreas: {', '.join(prof['areas'])}\nCitations: {prof['citations']}",
+                title=f"Name: {prof['name']}\nAreas: {', '.join(prof['areas'])}\nCitations: {prof['citations']}",
             )
         )
 
