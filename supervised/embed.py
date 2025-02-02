@@ -4,6 +4,8 @@ from sentence_transformers import SentenceTransformer
 from chonkie import TokenChunker
 from tqdm import tqdm
 from tokenizers import Tokenizer
+from supervised.data import summaries
+from transformers import AutoTokenizer
 
 # Initialize Supabase client
 url: str = st.secrets["supabase"]["SUPABASE_URL"]
@@ -12,44 +14,35 @@ supabase: Client = create_client(url, key)
 
 # Initialize sentence transformer model and text chunker
 model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
-tokenizer = Tokenizer.from_pretrained("sentence-transformers/all-mpnet-base-v2")
+# tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base")
 
 # Initialize the chunker
-chunker = TokenChunker(tokenizer)
+# chunker = TokenChunker(tokenizer)
 
 
 def process_professor_papers():
     try:
         # Fetch all professors
-        response = supabase.table("professors").select("*").execute()
-        professors = response.data
+        # response = supabase.table("professors").select("*").execute()
+        professors = summaries.keys()
 
-        for professor in tqdm(professors, desc="Processing professors"):
-            professor_id = professor["id"]
+        for professor_id in tqdm(professors, desc="Processing professors"):
 
-            # Process all papers (both recent and most cited)
-            all_papers = (
-                professor["publications"]["recent_papers"]
-                + professor["publications"]["most_cited_papers"]
-            )
-
-            for paper in tqdm(all_papers, desc="Processing papers", leave=False):
-                abstract = paper["abstract"]
-                # Split abstract into chunks using chonky
-                chunks = chunker(abstract)
-
-                for chunk in tqdm(chunks, desc="Processing chunks", leave=False):
+            for paper in tqdm(summaries[professor_id], desc="Processing papers", leave=False):                
+                # chunks = chunker(paper)
+                # chunks = [paper]
+                # for chunk in tqdm(chunks, desc="Processing chunks", leave=False):
                     # Generate embedding
-                    embedding = model.encode(chunk.text)
+                embedding = model.encode(paper)
 
-                    # Insert into documents table
-                    doc_data = {
-                        "professor_id": professor_id,
-                        "text": chunk.text,
-                        "embedding": embedding.tolist(),  # Convert numpy array to list
-                    }
+                # Insert into documents table
+                doc_data = {
+                    "professor_id": professor_id,
+                    "text": paper,
+                    "embedding": embedding.tolist(),  # Convert numpy array to list
+                }
 
-                    supabase.table("documents").insert(doc_data).execute()
+                supabase.table("documents").insert(doc_data).execute()
         print("Successfully processed all papers and created embeddings")
 
     except Exception as e:

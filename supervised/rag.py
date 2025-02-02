@@ -11,7 +11,7 @@ supabase: Client = create_client(url, key)
 model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
 
 
-def get_similar_documents(query: str, limit: int = 5):
+def get_similar_documents(query: str, limit: int = 10):
     """
     Get most similar documents to the query from the documents table.
 
@@ -33,10 +33,13 @@ def get_similar_documents(query: str, limit: int = 5):
             "match_documents",
             {
                 "query_embedding": query_embedding_list,
+                "match_count": limit,
             },
         ).execute()
 
         results = []
+        # Group documents by professor
+        prof_docs = {}
         for doc in response.data:
             # Get professor details for this document
             doc_response = (
@@ -51,16 +54,31 @@ def get_similar_documents(query: str, limit: int = 5):
                     supabase.table("professors").select("*").eq("id", prof_id).execute()
                 )
                 professor = prof_response.data[0] if prof_response.data else None
-            else:
-                professor = None
+                
+                if professor:
+                    if prof_id not in prof_docs:
+                        prof_docs[prof_id] = {
+                            "professor": professor,
+                            "documents": []
+                        }
+                    prof_docs[prof_id]["documents"].append({
+                        "text": doc["text"],
+                        "similarity": doc["similarity"]
+                    })
 
-            results.append(
-                {
-                    "text": doc["text"],
-                    "professor": professor,
-                    "similarity": doc["similarity"],
-                }
-            )
+        # Sort professors by number of matching documents and flatten results
+        for prof_id, data in sorted(
+            prof_docs.items(),
+            key=lambda x: len(x[1]["documents"]),
+            reverse=True
+        ):
+            # for doc in data["documents"]:
+            results.append({
+                # "text": data["documents"][0]["text"],
+                "professor": data["professor"],
+                "number_matches": len(data["documents"]),
+                # "similarity": data["documents"][0]["similarity"]
+            })
 
         return results
 
@@ -76,6 +94,6 @@ if __name__ == "__main__":
     print(query)
     print("-" * 50)
     for result in results:
-        print(result["professor"]["profile"]["name"], result["similarity"])
-        print(result["text"])
+        print(result["professor"]["profile"]["name"], result["number_matches"])
+        print(result["professor"]["summary"])
         print("-" * 50)
