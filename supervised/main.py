@@ -2,6 +2,8 @@ import streamlit as st
 from streamlit_extras.colored_header import colored_header
 from supabase import create_client
 from streamlit_agraph import agraph, Node, Edge, Config
+import plotly.express as px
+import pandas as pd
 
 # Streamlit page configuration
 st.set_page_config(page_title="Supervised", layout="wide")
@@ -160,3 +162,50 @@ with tab2:
     )
 
     return_value = agraph(nodes=nodes, edges=edges, config=config)
+
+
+with tab3:
+    
+    if filtered_professors == []:
+        st.warning("No professors found matching your criteria.")
+    else:
+        df = pd.DataFrame(filtered_professors)
+
+        def create_scatter_plot():
+            st.subheader("H-Index vs. Total Citations")
+            fig = px.scatter(
+                df,
+                x='h_index',
+                y='citations',
+                size='h_index',
+                hover_data=['name', 'areas'],
+                labels={'h_index': 'H-Index', 'citations': 'Total Citations', 'name': 'Professor'}
+            )
+            
+            fig.update_layout(
+                showlegend=False,
+                plot_bgcolor='white',
+                width=800,
+                height=600,
+                hovermode='closest'
+            )
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGray')
+            st.plotly_chart(fig, use_container_width=True)
+
+        def show_rankings():
+            metrics = {
+            "H-Index": "h_index",
+            "Citations": "citations"
+            }
+            
+            for title, metric in metrics.items():
+                st.subheader(f"Ranking by {title}")
+                # Sort dataframe by the current metric in descending order
+                sorted_df = df.sort_values(by=metric, ascending=False)
+                chart_type = st.scatter_chart if metric == "h_index" else st.bar_chart
+                chart_type(data=sorted_df, x="name", y=metric, use_container_width=True)
+
+
+        create_scatter_plot()
+        show_rankings()
