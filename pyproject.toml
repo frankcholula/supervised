@@ -15,6 +15,7 @@ streamlit-supabase = "^0.5"
 streamlit-extras = "^0.5.0"
 sentence-transformers = "^3.4.1"
 chonkie = "^0.4.1"
+streamlit-agraph = "^0.0.45"
 
 
 [build-system]
