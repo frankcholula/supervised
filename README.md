@@ -1,4 +1,4 @@
 # supervised 🧪
 https://supervised.streamlit.app/
 
-![alt text](image.png)
+![alt text](assets/image.png)
