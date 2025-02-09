@@ -12,7 +12,7 @@ professors = [
     "Eddy Zhu",
     "Wenwu Wang",
     "Miroslaw Bober",
-    "Phillip J.B. Jackson",
+    "Phillip Jackson",
     "Muhammad Rana",
     "Kevin Wells",
     "Simon Hadfield",
@@ -105,12 +105,13 @@ if __name__ == "__main__":
 
         supabase: Client = create_client(url, key)
 
+        print("hello world")
         professor_name = random.choice(professors)
 
-        # author = cache.author
-        # papers = cache.papers
-        author, papers = fetch_recent_papers(professor_name, 5)
-        # author, papers = cache.author, cache.papers
+        author = cache.author
+        papers = cache.papers
+        # author, papers = fetch_recent_papers(professor_name, 5)
+        author, papers = cache.author, cache.papers
 
         data = {
             "email": author["scholar_id"],

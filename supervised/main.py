@@ -12,6 +12,7 @@ from ast import literal_eval
 st.set_page_config(page_title="Supervised", layout="wide")
 
 # Streamlit tabs
+# TODO: Add tabs later to unclutter some data
 tab1, tab2, tab3 = st.tabs(["Recommendations", "Network Graph", "Rankings"])
 
 
