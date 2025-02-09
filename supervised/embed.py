@@ -1,11 +1,12 @@
 import streamlit as st
 from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
-from chonkie import TokenChunker
 from tqdm import tqdm
-from tokenizers import Tokenizer
 from supervised.data import summaries
+from chonkie import TokenChunker
+from tokenizers import Tokenizer
 from transformers import AutoTokenizer
+
 
 # Initialize Supabase client
 url: str = st.secrets["supabase"]["SUPABASE_URL"]
